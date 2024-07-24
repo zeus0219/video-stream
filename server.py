@@ -39,4 +39,4 @@ def handle_frame(data):
 
 if __name__ == '__main__':
     context = ('server.crt', 'server.key')  # Paths to your certificate and key files
-    socketio.run(app, host='0.0.0.0', port=4000, ssl_context=context)
+    socketio.run(app, host='0.0.0.0', port=4000)
