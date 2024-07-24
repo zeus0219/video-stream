@@ -2,10 +2,6 @@ from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 import numpy as np
 import cv2
-import eventlet
-from eventlet import wsgi
-
-
 app = Flask(__name__)
 socketio = SocketIO(app)
 
@@ -43,4 +39,4 @@ def handle_frame(data):
 
 if __name__ == '__main__':
     context = ('server.crt', 'server.key')  # Paths to your certificate and key files
-    wsgi.server(eventlet.listen(('0.0.0.0', 4000)), app, ssl_context=context)
+    socketio.run(app, host='0.0.0.0', port=4000, ssl_context=context)
