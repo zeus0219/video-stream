@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Video Streaming</title>
+</head>
+
+<body>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <canvas id="processed" width="640" height="480"></canvas>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const processed = document.getElementById('processed');
+            const context = canvas.getContext('2d');
+            const processedContext = processed.getContext('2d');
+
+            // Access webcam
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    video.srcObject = stream;
+                })
+                .catch(err => console.error('Error accessing webcam: ' + err));
+
+            const socket = io('http://localhost:4000');
+
+            video.addEventListener('play', () => {
+                setInterval(() => {
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            const arrayBuffer = reader.result;
+                            socket.emit('frame', arrayBuffer);
+                        };
+                        reader.readAsArrayBuffer(blob);
+                    }, 'image/jpeg');
+                }, 100); // Adjust the interval as needed
+            });
+
+            socket.on('processed_frame', (data) => {
+                const blob = new Blob([new Uint8Array(data)], { type: 'image/jpeg' });
+                const url = URL.createObjectURL(blob);
+                const image = new Image();
+                image.src = url;
+                image.onload = () => {
+                    processedContext.drawImage(image, 0, 0, processed.width, processed.height);
+                    URL.revokeObjectURL(url);
+                };
+            });
+        })
+    </script>
+</body>
+
+</html>
